@@ -1,0 +1,21 @@
+---
+description: Los cambios se publican solo mediante pull request
+alwaysApply: true
+---
+
+# Actualizaciones por pull request
+
+La rama `master` está protegida en GitHub. Cualquier actualización se publica con un pull request.
+
+- Crea una rama desde `master` para cada cambio.
+- Haz commit en esa rama y súbela al remoto.
+- Abre un pull request hacia `master`.
+- No hagas push directo a `master`, ni force-push, ni un merge local seguido de push a `master`.
+
+```bash
+git switch -c feature/descripcion
+git add <archivos>
+git commit -m "mensaje"
+git push -u origin HEAD
+gh pr create --base master --title "titulo" --body "resumen"
+```
