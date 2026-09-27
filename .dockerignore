@@ -1,0 +1,14 @@
+# Aplica al build cuyo contexto es la raíz del monorepo.
+**/node_modules
+**/dist
+**/build
+**/coverage
+**/*.log
+**/.env
+.git
+.github
+web
+infra
+**/*.test.ts
+test-results
+playwright-report

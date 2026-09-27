@@ -1,0 +1,10 @@
+packages:
+  - "api"
+  - "worker"
+  - "web"
+  - "packages/*"
+allowBuilds:
+  cpu-features: false
+  esbuild: true
+  protobufjs: false
+  ssh2: false
