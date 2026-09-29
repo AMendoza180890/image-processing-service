@@ -105,14 +105,25 @@ Otherwise commit the phase and open a pull request, following `.cursor/rules/pul
 4. **Commit.** Match the repo's style (`git log -3`): a one-line summary as a sentence, a blank
    line, then a short paragraph on what the phase delivers and why. End with the trailer
    `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
-5. **Push:** `git push -u origin HEAD`.
-6. **Open the PR** against `master`. In this WSL, `gh` may only exist as `gh.exe`; use
-   `command -v gh || command -v gh.exe`. First run `gh pr view --json url` to see whether a PR
-   already exists for this branch. If one does, the push has updated it; just report its URL.
-   Otherwise:
+   WSL git has no identity set. Take it from Windows git for this one command, without changing
+   any config:
+   `git -c user.name="$(git.exe config --global user.name | tr -d '\r')" -c user.email="$(git.exe config --global user.email | tr -d '\r')" commit -F <msgfile>`.
+5. **Push.** WSL git has no GitHub credentials, so borrow the Windows credential manager for
+   this one command:
+   `git -c credential.helper= -c credential.helper="/mnt/c/Program\ Files/Git/mingw64/bin/git-credential-manager.exe" push -u origin HEAD`.
+6. **Open the PR** against `master`. `gh` exists only as `gh.exe` (Windows, already logged in).
+   Pass `--repo` and `--head` explicitly, and pass the body with `--body "$(cat <<'EOF' … EOF)"`,
+   because `gh.exe` can't read WSL `/tmp` paths. First run
+   `gh.exe pr list --repo <owner/repo> --head <branch> --json url` to see whether a PR already
+   exists for this branch. If one does, the push has updated it; just report its URL. Otherwise:
    ```bash
-   gh pr create --base master --title "Phase <N>: <summary>" --body-file <tmpfile>
+   gh.exe pr create --repo <owner/repo> --base master --head <branch> \
+     --title "Phase <N>: <summary>" --body "$(cat <<'EOF'
+   …
+   EOF
+   )"
    ```
+   Take `<owner/repo>` from `git remote get-url origin`.
    Add `--draft` when the verdict is **PASS WITH PENDING**. Body sections: **Summary**
    (deliverables), **Tests** (the Gates table and the tests you added), **Review findings**
    (any non-blocking ones, e.g. conventions), **Pending verification** (skipped gates with their
