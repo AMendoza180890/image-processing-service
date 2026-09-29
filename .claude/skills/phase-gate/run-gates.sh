@@ -46,4 +46,12 @@ else
   skip e2e "No stack answering at $API_URL/health (run: docker compose up --build)"
 fi
 
+WEB_URL="${E2E_WEB_URL:-http://localhost:8080}"
+if curl -fsS "$WEB_URL/" >/dev/null 2>&1; then
+  # Primera vez: `pnpm --filter @app/web exec playwright install chromium`.
+  run e2e-web env E2E_WEB_URL="$WEB_URL" pnpm --filter @app/web test:e2e
+else
+  skip e2e-web "No web answering at $WEB_URL (run: docker compose up --build)"
+fi
+
 grep -q $'\tFAIL\t' "$OUT/summary.tsv" && exit 1 || exit 0
