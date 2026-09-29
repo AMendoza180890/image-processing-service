@@ -73,7 +73,7 @@ response with the `@app/types` zod schemas and maps HTTP errors to `ApiError` me
 polls `GET /jobs` only while some job is `pending`/`processing`. `App` takes the `ApiClient` (and a
 `navigate` fn for downloads) as props, which are the seams for tests. Tests inject `FakeApiClient`
 from `test-helpers.ts`, never mock `fetch` globally. The browser always calls a relative `/api`
-base: Nginx (`web/nginx/default.conf`) proxies it to `api:3000` in compose, and Vite's dev proxy
+base: Nginx (`web/nginx/default.conf.template`) proxies it to `api:3000` in compose, and Vite's dev proxy
 does the same, so there's no CORS in the normal path. `web/` is the one package that uses
 `moduleResolution: Bundler`, so **relative imports there have no `.js` extension**. Download links
 are presigned with `Content-Disposition: attachment` so they download instead of navigating away.
