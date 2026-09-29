@@ -16,6 +16,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile
 
 # Código fuente y build.
+COPY tsconfig.base.json ./
 COPY packages/types packages/types
 COPY api api
 RUN pnpm --filter @app/types build \

@@ -70,3 +70,16 @@ export const jobMessageSchema = z.object({
   jobId: z.string().uuid(),
 });
 export type JobMessage = z.infer<typeof jobMessageSchema>;
+
+/**
+ * Tipos de imagen aceptados en la subida. La API los valida (415) y el front los usa
+ * en el `accept` del input y para rechazar archivos antes de subirlos.
+ */
+export const ACCEPTED_IMAGE_MIME_TYPES = [
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+] as const;
+export const acceptedImageMimeTypeSchema = z.enum(ACCEPTED_IMAGE_MIME_TYPES);
+export type AcceptedImageMimeType = z.infer<typeof acceptedImageMimeTypeSchema>;

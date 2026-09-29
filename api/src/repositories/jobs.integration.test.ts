@@ -53,6 +53,14 @@ describe.skipIf(!runDocker)("PgJobsRepository (integración)", () => {
     expect(await repo.findById("00000000-0000-0000-0000-000000000000")).toBeNull();
   });
 
+  it("markError pasa el job a error con su mensaje (satisface el CHECK de status)", async () => {
+    const created = await repo.create({ originalFilename: "falla.png" });
+    await repo.markError(created.id, "No se pudo encolar la imagen para procesarla");
+    const found = await repo.findById(created.id);
+    expect(found?.status).toBe("error");
+    expect(found?.errorMessage).toBe("No se pudo encolar la imagen para procesarla");
+  });
+
   it("list pagina y cuenta el total", async () => {
     const before = await repo.list(100, 0);
     await repo.create({ originalFilename: "x.png" });

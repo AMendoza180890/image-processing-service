@@ -7,8 +7,9 @@
 **/.env
 .git
 .github
-web
 infra
 **/*.test.ts
+**/*.test.tsx
+web/e2e
 test-results
 playwright-report

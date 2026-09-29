@@ -6,6 +6,7 @@ import {
   listJobsQuerySchema,
   jobIdParamsSchema,
   jobMessageSchema,
+  acceptedImageMimeTypeSchema,
 } from "./index.js";
 
 const validJob = {
@@ -71,5 +72,19 @@ describe("jobIdParamsSchema", () => {
 describe("jobMessageSchema", () => {
   it("valida el mensaje de cola", () => {
     expect(jobMessageSchema.parse({ jobId: validJob.id })).toEqual({ jobId: validJob.id });
+  });
+});
+
+describe("acceptedImageMimeTypeSchema", () => {
+  it("acepta los tipos de imagen soportados por el worker", () => {
+    for (const type of ["image/png", "image/jpeg", "image/webp", "image/gif"]) {
+      expect(acceptedImageMimeTypeSchema.safeParse(type).success).toBe(true);
+    }
+  });
+
+  it("rechaza tipos que sharp no procesa o que no son imagen", () => {
+    for (const type of ["image/svg+xml", "text/plain", "application/pdf", ""]) {
+      expect(acceptedImageMimeTypeSchema.safeParse(type).success).toBe(false);
+    }
   });
 });
