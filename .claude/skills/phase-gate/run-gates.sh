@@ -33,15 +33,38 @@ run lint pnpm lint
 run format pnpm format:check
 run unit-tests pnpm test
 
-if docker info >/dev/null 2>&1; then
-  run integration-tests env DOCKER_TESTS=1 pnpm test
+# In this WSL, `node`/`pnpm` are Windows executables: env vars reach them only when listed in
+# WSLENV. Without this, DOCKER_TESTS/E2E_* are silently dropped and the gated suites skip.
+with_env() {
+  local names=()
+  while [[ "$1" == *=* ]]; do export "$1"; names+=("${1%%=*}"); shift; done
+  local joined; joined=$(IFS=:; echo "${names[*]}")
+  WSLENV="${WSLENV:+$WSLENV:}$joined" "$@"
+}
+
+# Run a gated suite and FAIL it if vitest skipped the files it was meant to run: a suite that
+# exits 0 because everything was skipped proved nothing.
+run_gated() {
+  local name="$1" pattern="$2"; shift 2
+  run "$name" "$@"
+  if grep -qE "↓.*($pattern)" "$OUT/$name.log"; then
+    sed -i "\$d" "$OUT/summary.tsv"
+    printf '%s\tFAIL\t0\t%s\n' "$name" "suite skipped: env var not forwarded to node?" >>"$OUT/summary.tsv"
+    echo "[FAIL] $name — ran but the gated tests were skipped"
+  fi
+}
+
+# Docker may only be reachable as Docker Desktop's docker.exe (WSL integration off).
+DOCKER=$(command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1 && echo docker || echo docker.exe)
+if "$DOCKER" info >/dev/null 2>&1; then
+  run_gated integration-tests 'integration\.test\.ts' with_env DOCKER_TESTS=1 pnpm test
 else
-  skip integration-tests "Docker unavailable (enable Docker Desktop WSL integration)"
+  skip integration-tests "Docker unavailable (start Docker Desktop)"
 fi
 
 API_URL="${E2E_BASE_URL:-http://localhost:3000}"
 if curl -fsS "$API_URL/health" >/dev/null 2>&1; then
-  run e2e env E2E_BASE_URL="$API_URL" pnpm --filter @app/api test -- src/e2e.test.ts
+  run_gated e2e 'e2e\.test\.ts' with_env E2E_BASE_URL="$API_URL" pnpm --filter @app/api test -- src/e2e.test.ts
 else
   skip e2e "No stack answering at $API_URL/health (run: docker compose up --build)"
 fi
@@ -49,7 +72,7 @@ fi
 WEB_URL="${E2E_WEB_URL:-http://localhost:8080}"
 if curl -fsS "$WEB_URL/" >/dev/null 2>&1; then
   # Primera vez: `pnpm --filter @app/web exec playwright install chromium`.
-  run e2e-web env E2E_WEB_URL="$WEB_URL" pnpm --filter @app/web test:e2e
+  run e2e-web with_env E2E_WEB_URL="$WEB_URL" pnpm --filter @app/web test:e2e
 else
   skip e2e-web "No web answering at $WEB_URL (run: docker compose up --build)"
 fi
