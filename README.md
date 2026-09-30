@@ -82,13 +82,13 @@ curl -s localhost:3000/jobs/<id>/download
 - **Integración** (requiere Docker): usan Testcontainers para levantar Postgres real.
 
   ```bash
-  DOCKER_TESTS=1 pnpm --filter @app/api test
+  DOCKER_TESTS=1 WSLENV=DOCKER_TESTS pnpm --filter @app/api test
   ```
 
 - **e2e** (requiere `docker compose up --build`):
 
   ```bash
-  E2E_BASE_URL=http://localhost:3000 pnpm --filter @app/api test -- src/e2e.test.ts
+  E2E_BASE_URL=http://localhost:3000 WSLENV=E2E_BASE_URL pnpm --filter @app/api test -- src/e2e.test.ts
   pnpm --filter @app/web exec playwright install chromium   # solo la primera vez
   pnpm --filter @app/web test:e2e                           # navegador contra :8080
   ```

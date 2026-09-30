@@ -13,7 +13,7 @@ test("subir una imagen → esperar Listo → descargar el thumbnail", async ({ p
   await expect(page.getByRole("heading", { name: "Procesador de imágenes" })).toBeVisible();
 
   const filename = `e2e-${Date.now()}.png`;
-  await page.getByLabel("Imagen").setInputFiles({
+  await page.getByLabel("Imagen", { exact: true }).setInputFiles({
     name: filename,
     mimeType: "image/png",
     buffer: solidPng(640, 480),
@@ -39,7 +39,7 @@ test("subir una imagen → esperar Listo → descargar el thumbnail", async ({ p
 
 test("un archivo que no es imagen se rechaza antes de subir", async ({ page }) => {
   await page.goto("/");
-  await page.getByLabel("Imagen").setInputFiles({
+  await page.getByLabel("Imagen", { exact: true }).setInputFiles({
     name: "nota.txt",
     mimeType: "text/plain",
     buffer: Buffer.from("hola"),

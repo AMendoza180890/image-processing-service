@@ -34,11 +34,11 @@ pnpm --filter @app/api test -- src/routes/jobs.test.ts
 pnpm --filter @app/api dev      # tsx watch (needs DATABASE_URL)
 
 # integration tests (spin up real Postgres + LocalStack via Testcontainers — requires Docker)
-DOCKER_TESTS=1 pnpm --filter @app/api test
-DOCKER_TESTS=1 pnpm --filter @app/worker test
+DOCKER_TESTS=1 WSLENV=DOCKER_TESTS pnpm --filter @app/api test
+DOCKER_TESTS=1 WSLENV=DOCKER_TESTS pnpm --filter @app/worker test
 
 # e2e against a running `docker compose up` stack (upload → poll until done → download presigned URL)
-E2E_BASE_URL=http://localhost:3000 pnpm --filter @app/api test -- src/e2e.test.ts
+E2E_BASE_URL=http://localhost:3000 WSLENV=E2E_BASE_URL pnpm --filter @app/api test -- src/e2e.test.ts
 pnpm --filter @app/web exec playwright install chromium   # once
 pnpm --filter @app/web test:e2e                           # browser e2e against web :8080
 
@@ -55,8 +55,13 @@ docker compose up --build
   `check` runs `build` first — keep that ordering.
 - **This WSL distro's `node` is a symlink to Windows `node.exe`**, so `corepack` does not execute.
   Install pnpm via `npm install -g pnpm` instead.
-- **Docker may be unavailable** in WSL until Docker Desktop → Settings → Resources → WSL Integration
-  is enabled. Integration tests and `docker compose` depend on it; unit tests do not.
+- **Env vars don't reach Windows `node.exe` unless listed in `WSLENV`.** `DOCKER_TESTS=1 pnpm test`
+  silently runs nothing gated (vitest skips → exit 0). Always write `DOCKER_TESTS=1 WSLENV=DOCKER_TESTS …`
+  (same for `E2E_BASE_URL`, `E2E_WEB_URL`). The `/phase-gate` script does this and fails a gated
+  suite that was skipped.
+- **Docker:** with Docker Desktop's WSL integration off, `docker` isn't on PATH but `docker.exe` works
+  (`docker.exe compose up --build`). Testcontainers works either way, because it runs under Windows
+  `node.exe` and talks to Docker Desktop directly.
 
 ## Architecture
 

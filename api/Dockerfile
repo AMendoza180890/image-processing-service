@@ -31,8 +31,8 @@ ENV NODE_ENV=production
 WORKDIR /app
 
 COPY --from=build /app ./
-# Las migraciones se ejecutan en el arranque del contenedor.
-COPY --from=build /repo/migrations ./migrations
+# Las migraciones (SQL plano, sin build) se copian directo del contexto; corren al arrancar.
+COPY migrations ./migrations
 COPY api/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
 
