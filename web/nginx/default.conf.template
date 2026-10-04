@@ -1,0 +1,30 @@
+# Nginx del front (imagen nginx-unprivileged: corre como no-root y escucha en 8080).
+server {
+  listen 8080;
+  server_name _;
+  root /usr/share/nginx/html;
+
+  # Mismo MAX_UPLOAD_MB que la API (env del contenedor). Un archivo justo en el límite puede
+  # recibir el 413 de Nginx por el envoltorio multipart; es el mismo 413. Default de Nginx: 1m.
+  client_max_body_size ${MAX_UPLOAD_MB}m;
+
+  # Proxy a la API por DNS de compose: el navegador habla same-origin, sin CORS.
+  location /api/ {
+    proxy_pass http://api:3000/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
+  # Assets con hash de Vite: cache largo e inmutable.
+  location /assets/ {
+    add_header Cache-Control "public, max-age=31536000, immutable";
+    try_files $uri =404;
+  }
+
+  # Fallback SPA; index.html sin cache para que un deploy nuevo se vea al recargar.
+  location / {
+    add_header Cache-Control "no-cache";
+    try_files $uri $uri/ /index.html;
+  }
+}

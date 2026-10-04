@@ -39,6 +39,8 @@ export interface JobsRepository {
   create(input: CreateJobInput): Promise<Job>;
   findById(id: string): Promise<Job | null>;
   list(limit: number, offset: number): Promise<{ jobs: Job[]; total: number }>;
+  /** Marca el job como `error` (ej. no se pudo subir a S3 o encolar en SQS). */
+  markError(id: string, errorMessage: string): Promise<void>;
 }
 
 export class PgJobsRepository implements JobsRepository {
@@ -74,5 +76,13 @@ export class PgJobsRepository implements JobsRepository {
       jobs: listResult.rows.map(rowToJob),
       total: Number(countResult.rows[0]!.count),
     };
+  }
+
+  async markError(id: string, errorMessage: string): Promise<void> {
+    await this.db.query(`UPDATE jobs SET status = $2, error_message = $3 WHERE id = $1`, [
+      id,
+      JobStatus.Error,
+      errorMessage,
+    ]);
   }
 }
